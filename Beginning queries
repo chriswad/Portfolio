@@ -1,0 +1,340 @@
+SELECT 
+    first_name, last_name
+FROM
+    employees;
+    
+SELECT *
+FROM employees
+WHERE first_name = 'Denis';
+
+SELECT *
+FROM employees
+WHERE first_name = 'Denis' AND gender = 'M';
+
+SELECT *
+FROM employees
+WHERE first_name = 'Denis' OR first_name = 'Elvis';
+
+SELECT *
+FROM employees
+WHERE last_name = 'Denis' AND (Gender = 'M' OR gender = 'F');
+
+SELECT *
+FROM employees
+WHERE first_name IN ('Cathie', 'Mark', 'Nathan');
+
+SELECT *
+FROM employees
+WHERE first_name LIKE ('Mark%');
+
+SELECT * 
+FROM employees
+WHERE emp_no LIKE ('1000_');
+
+SELECT *
+FROM employees
+WHERE first_name NOT LIKE ('%Jack%');
+
+SELECT *
+FROM employees
+WHERE hire_date BETWEEN '1900-01-01' AND '2000-01-01';
+
+SELECT *
+FROM employees
+WHERE first_name IS NULL;
+
+SELECT *
+FROM employees
+WHERE hire_date >= '2000-01-01';
+
+SELECT distinct gender
+FROM employees;
+
+SELECT COUNT(emp_no)
+FROM employees;
+
+SELECT *
+FROM employees
+ORDER BY first_name ASC, last_name DESC;
+
+SELECT first_name
+FROM employees
+GROUP BY first_name;
+
+SELECT first_name, COUNT(first_name) AS 'Count of Names'
+FROM employees
+GROUP BY first_name
+ORDER BY COUNT(first_name) ASC;
+
+SELECT first_name, COUNT(first_name)
+FROM employees
+GROUP BY first_name
+HAVING COUNT(first_name) > 250
+ORDER BY first_name;
+
+
+SELECT first_name, COUNT(first_name) AS names_count
+FROM employees
+WHERE hire_date > 1999-01-01
+GROUP BY first_name
+HAVING COUNT(first_name) < 200
+ORDER BY first_name DESC;
+
+SELECT *
+FROM salaries
+ORDER BY salary DESC
+LIMIT 10;
+
+INSERT INTO employees
+(
+	emp_no,
+    birth_date,
+    first_name,
+    last_name,
+    gender,
+    hire_date
+)
+VALUES
+(
+	999901,
+    '1986-04-21',
+    'John',
+    'Smith',
+    'M',
+    '2011-01-01'
+);
+
+SELECT *
+FROM employees
+ORDER BY emp_no DESC;
+
+
+CREATE TABLE departments_dup
+(
+	dept_no CHAR(4) NOT NULL,
+    dept_name VARCHAR(40) NOT NULL
+    );
+    
+INSERT INTO departments_dup
+(
+	dept_no,
+    dept_name
+)
+SELECT *
+FROM departments;
+
+SELECT *
+FROM departments_dup
+ORDER BY dept_no;
+
+INSERT INTO departments
+VALUES
+(
+	'd010',
+    'Business Analysis'
+    );
+    
+    
+UPDATE employees
+SET
+		first_name = 'Stella',
+        last_name = 'Parkinson',
+        birth_date = '1990-12-31',
+        gender = 'F'
+WHERE
+		emp_no = 999901;
+
+SELECT *
+FROM employees
+WHERE emp_no = 999901;
+
+DELETE FROM employees
+WHERE emp_no = 999901;
+
+SELECT *
+FROM employees
+WHERE emp_no = 999901;
+
+ROLLBACK;
+    
+
+SELECT SUM(salary)
+FROM salaries
+WHERE from_date > '1997-01-01';
+
+SELECT MIN(salary)
+FROM salaries;
+
+
+ROLLBACK;
+
+SELECT ROUND(AVG(salary))
+FROM salaries;
+
+SELECT ROUND(AVG(salary), 2)
+FROM salaries;
+
+SELECT dept_no,
+	IFNULL(dept_name, 'Department name not ptovided') AS dept_name
+FROM departments_dup;
+
+SELECT dept_no, dept_name,
+		COALESCE(dept_no, dept_name, 'N/A') AS dept_manager
+FROM departments_dup
+ORDER BY dept_no ASC;
+
+SELECT dept_no, dept_name,
+		COALESCE ('department mananer name') AS fake_column
+FROM departments_dup;
+
+set @@global.sql_mode := replace(@@global.sql_mode,
+'ONLY_FULL_GROUP_BY', '');
+
+DROP TABLE IF EXISTS departments_dup;
+
+CREATE TABLE departments_dup
+(
+	dept_no CHAR(4) NULL,
+    dept_name VARCHAR(40) NULL
+    );
+    
+    INSERT INTO departments_dup
+    (
+		dept_no,
+        dept_name
+	)
+    SELECT *
+    FROM departments;
+    
+    INSERT INTO departments_dup (dept_name)
+    VALUES
+		('Public Relations');
+        
+	DELETE FROM departments_dup
+    WHERE dept_no = 'd002';
+    
+    INSERT INTO departments_dup(dept_no)
+    VALUES ('d010'), ('d011');
+        
+	CREATE TABLE dept_manager_dup
+    (
+		emp_no int(11) NOT NULL,
+        dept_no char(4) NULL,
+        from_date date NOT NULL,
+        to_date date NULL
+        );
+        
+	INSERT INTO dept_manager_dup
+    SELECT *
+    FROM dept_manager;
+    
+    INSERT INTO dept_manager_dup(emp_no, from_date)
+    VALUES
+		(999904, '2017-01-01'),
+		(999905, '2017-01-01'),
+		(999906, '2017-01-01'),
+		(999907, '2017-01-01');
+        
+	DELETE FROM dept_manager_dup
+    WHERE dept_no = 'd001';
+    
+SELECT e.emp_no, e.first_name, e.last_name, dm.dept_no, e.hire_date
+FROM employees e
+JOIN dept_manager dm ON e.emp_no = dm.emp_no;
+    
+    
+SELECT e.first_name, e.last_name, e.hire_date, t.title
+FROM employees e
+JOIN titles t ON e.emp_no = t.emp_no
+WHERE first_name = 'Margareta' AND last_name = 'Markovitch'
+ORDER BY e.emp_no;   
+
+SELECT 
+    dm.*, d.*
+FROM
+    departments d
+		CROSS JOIN
+    dept_manager dm
+WHERE
+    d.dept_no = 'd009'
+ORDER BY d.dept_no;
+
+
+SELECT
+	e.first_name,
+    e.last_name,
+    e.hire_date,
+    t.title,
+    m.from_date,
+    d.dept_name
+FROM employees e
+JOIN dept_manager m ON e.emp_no = m.emp_no
+JOIN departments d ON m.dept_no = d.dept_no
+JOIN titles t ON e.emp_no = t.emp_no
+WHERE t.title = 'Manager'
+ORDER BY e.emp_no;
+
+SELECT COUNT(GENDER= 'F')
+FROM employees;
+
+SELECT *
+FROM dept_manager
+WHERE emp_no IN (SELECT emp_no
+				FROM employees
+                WHERE hire_date BETWEEN '1990-01-01' AND '1995-01-01');
+
+SELECT e.first_name, e.last_name
+FROM employees e 
+WHERE
+	EXISTS( SELECT *
+			FROM dept_manager dm
+			WHERE dm.emp_no = e.emp_no);
+
+SELECT A.*
+FROM
+	(SELECT e.emp_no AS employee_ID,
+		MIN(de.dept_no) AS department_code,
+        (SELECT emp_no
+			FROM dept_manager
+            WHERE emp_no = 110022) AS manager_ID
+	FROM employees e
+    JOIN dept_emp de ON e.emp_no = de.emp_no
+    WHERE e.emp_no <= 10020
+    GROUP BY e.emp_no
+    ORDER BY e.emp_no) AS A
+UNION SELECT
+	B.*
+FROM
+	(SELECT e.emp_no AS employee_ID,
+		MIN(de.dept_no) AS department_code,
+        (SELECT emp_no
+        FROM dept_manager
+        WHERE emp_no = 110039) AS manager_ID
+	FROM employees e
+    JOIN dept_emp de ON e.emp_no = de.emp_no
+    WHERE e.emp_no > 10020
+    GROUP BY e.emp_no
+    ORDER BY e.emp_no
+    LIMIT 20) AS B;
+
+CREATE OR REPLACE VIEW v_manager_avg_salary AS
+	SELECT ROUND(AVG(salary),2)
+    FROM salaries s 
+    JOIN dept_manager m ON s.emp_no = m.emp_no;
+    
+USE employees;
+
+DROP PROCEDURE IF EXISTS select_employees;
+
+DELIMITER $$
+CREATE PROCEDURE select_employees()
+BEGIN
+	SELECT * FROM employees
+	LIMIT 1000;
+END$$
+DELIMITER ;
+
+CALL employees.select_employees();
+
+
+
